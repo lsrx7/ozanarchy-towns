@@ -1,0 +1,25 @@
+name: ozanarchy-towns
+version: '1.0'
+main: net.ozanarchy.ozanarchyTowns.OzanarchyTowns
+api-version: '1.21'
+depend: [ozanarchy-economy]
+
+permissions:
+  oztowns.commands:
+    default: true
+    description: 'Allows usage of Towns Commands.'
+  oztowns.claim:
+    default: true
+    description: 'Allows the player to claim land.'
+  oztowns.create:
+    default: true
+    description: 'allows players to create a town.'
+  oztowns.admin.protectionbypass:
+    default: op
+    description: 'Allows admins to build and destroy blocks in towns.'
+
+commands:
+  towns:
+    aliases: [town, oztowns, towny]
+    usage: '/towns help'
+    description: 'Towns command for OzAnarchy-Towns'

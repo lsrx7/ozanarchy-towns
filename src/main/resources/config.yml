@@ -1,0 +1,58 @@
+#Required, this is how data is stored
+mysql:
+  host: localhost
+  port: 3306
+  database: minecraft
+  username: root
+  password: password
+
+#Cost to create a town
+towns:
+  cost: 1.0
+
+#Claim Cost
+claims:
+  cost: 1.0
+  #Per real day cost to keep the town
+  upkeep: 1.0
+
+#message Prefix (Server name) leave a space after the prefix
+prefix: '&f&l[&c&lOz&4&lTowns&f&l] '
+
+#The Help menu to show commands
+help:
+  - "&f/towns create [townname] &aCreates a town."
+  - "&f/towns abandon &aDeletes your town."
+  - "&f/towns add [player] &aAdds a player to your town."
+  - "&f/towns remove [player] &aKicks a player from the town."
+  - "&f/towns promote [player] &aPromotes the player from Member to Officer."
+  - "&f/towns demote [player] &aDemotes the player from Officer to Member."
+  - "&f/towns claim &aClaims the chunk you are standing in."
+  - "&f/towns unclaim &aUnclaims the chunk you are standing in."
+  - "&f/towns leave &aLeaves the town you are in."
+
+#Customize most messages sent to the player.
+messages:
+  nopermission: "&cYou do not have permission for this command."
+  playernotfound: "&cCould not find the player."
+  incorrectusage: "&cIncorrect usage. &f/towns help"
+  notenough: "&cYou don't have enough money."
+  chunkowned: "&cThis chunk is owned by another town."
+  chunknotowned: "&cThis chunk is not owned."
+  chunkclaimed: "&aYou have successfully claimed this chunk."
+  alreadyinatown: "&cYou are already in a town."
+  townnametaken: "&cSomeone is already using this town name."
+  failedtomaketown: "&cFailed to create the town."
+  notownexists: "&cTown does not exist."
+  notown: "&cYou are not in a town."
+  notmayor: "&cYou are not the towns Mayor."
+  nottownadmin: "&cYou are not a town administrator."
+  towndeleted: "&cYou have abandoned your town."
+  chunkremoved: "&aYou have unclaimed this chunk."
+  missinginteractperm: "&cThis area is owned. You cannot interact here."
+  playeralreadyintown: "&cPlayer already om a town."
+  lefttown: "&aYou have left the town."
+  playernotinyourtown: "&cPlayer is not in your town."
+  cantpromote: "&cThis player cannot be promoted."
+  cantdemote: "&cThis player cannot be demoted."
+  missingcontainerperm: "&cYou do not have permission to access containers in this town."
