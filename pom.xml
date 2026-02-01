@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.ozanarchy</groupId>
-    <artifactId>ozanarchy-voting</artifactId>
+    <artifactId>ozanarchy-towns</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 
-    <name>ozanarchy-voting</name>
+    <name>ozanarchy-towny</name>
 
     <properties>
         <java.version>21</java.version>
@@ -41,19 +41,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.3</version> <!-- Use a recent version -->
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -69,8 +56,8 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>BenCodez Repo</id>
-            <url>https://nexus.bencodez.com/repository/maven-public/</url>
+            <id>placeholderapi</id>
+            <url>https://repo.helpch.at/releases/</url>
         </repository>
     </repositories>
 
@@ -82,30 +69,20 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.bencodez</groupId>
-            <artifactId>votifierplus</artifactId>
-            <version>LATEST</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.15.1</version> <!-- Use the latest version available -->
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20250107</version> <!-- Use the latest version available -->
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
-            <version>2.5.1</version> <!-- Use the latest version available -->
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
         </dependency>
         <dependency>
             <groupId>net.ozanarchy</groupId>
-            <artifactId>ozanarchy-stats</artifactId>
+            <artifactId>ozanarchy-economy</artifactId>
             <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.7</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -2,13 +2,15 @@ package net.ozanarchy.ozanarchyTowns.events;
 
 import net.ozanarchy.ozanarchyEconomy.api.EconomyAPI;
 import net.ozanarchy.ozanarchyTowns.OzanarchyTowns;
-import net.ozanarchy.ozanarchyTowns.Utils;
+import net.ozanarchy.ozanarchyTowns.util.Utils;
 import net.ozanarchy.ozanarchyTowns.handlers.DatabaseHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.event.Listener;
 import org.bukkit.entity.Player;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -22,6 +24,7 @@ public class TownEvents implements Listener {
     private final String notEnough = config.getString("messages.notenough");
     private final String noPerm = config.getString("messages.nopermission");
     private final String incorrectUsage = config.getString("messages.incorrectusage");
+    private final Double upkeepCost = config.getDouble("claims.upkeep");
 
     public TownEvents(DatabaseHandler data, OzanarchyTowns plugin, EconomyAPI economy){
         this.db = data;
@@ -48,7 +51,9 @@ public class TownEvents implements Listener {
                     return;
                 }
 
-                db.saveClaim(chunk, db.getPlayerTownId(uuid));
+                int townId = db.getPlayerTownId(uuid);
+                db.increaseUpkeep(townId, upkeepCost);
+                db.saveClaim(chunk, townId);
                 Bukkit.getScheduler().runTask(plugin, () -> {
                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunkclaimed")));
                 });
@@ -91,12 +96,14 @@ public class TownEvents implements Listener {
             economy.remove(uuid, config.getDouble("towns.cost"), success -> {
                 if (!success) {
                     p.sendMessage(Utils.getColor(prefix + notEnough));
+                    return;
                 }
             });
 
            try {
                int townId = db.createTown(townName, uuid);
                db.addMember(townId, uuid, "MAYOR");
+               db.createTownBank(townId);
                Bukkit.getScheduler().runTask(plugin, () -> {
                    p.sendMessage(Utils.getColor(prefix + "&aTown &f" + townName + " &acreated successfully."));
                });
@@ -126,6 +133,7 @@ public class TownEvents implements Listener {
 
         db.deleteClaim(townId);
         db.deleteMembers(townId);
+        db.deleteTownBank(townId);
         db.deleteTown(townId);
         p.sendMessage(Utils.getColor(prefix + config.getString("messages.towndeleted")));
         return;
@@ -137,28 +145,65 @@ public class TownEvents implements Listener {
             UUID uuid = p.getUniqueId();
             Integer townId = db.getPlayerTownId(uuid);
             if (townId == null){
-                p.sendMessage(Utils.getColor(prefix + config.getString("messages.notown")));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.notown")));
+                });
                 return;
             }
             if (!db.isTownAdmin(uuid, townId)){
-                p.sendMessage(Utils.getColor(prefix + config.getString("messages.nottownadmin")));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.nottownadmin")));
+                });
                 return;
             }
             Integer claimTown = db.getChunkTownId(chunk);
             if(claimTown == null){
-                p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunknotowned")));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunknotowned")));
+                });
                 return;
             }
             if(claimTown != townId){
-                p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunkowned")));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunkowned")));
+                });
                 return;
             }
 
             boolean success = db.unClaimChunk(chunk, townId);
             if(success){
-                p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunkremoved")));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + config.getString("messages.chunkremoved")));
+                });
+                db.decreaseUpkeep(townId, upkeepCost);
+                return;
             } else {
-                p.sendMessage(Utils.getColor(prefix + "&cFailed to unclaim the chunk."));
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    p.sendMessage(Utils.getColor(prefix + "&cFailed to unclaim the chunk."));
+                });
+                return;
+            }
+        });
+    }
+
+    public void notifyTown(int townId, String message) {
+        String sql = "SELECT uuid FROM town_members WHERE town_id=?";
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+                stmt.setInt(1, townId);
+                ResultSet rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    UUID uuid = UUID.fromString(rs.getString("uuid"));
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null) {
+                        Bukkit.getScheduler().runTask(plugin, () ->
+                                p.sendMessage(Utils.getColor(Utils.prefix() + message))
+                        );
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         });
     }

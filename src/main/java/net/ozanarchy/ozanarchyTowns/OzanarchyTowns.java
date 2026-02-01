@@ -1,20 +1,19 @@
 package net.ozanarchy.ozanarchyTowns;
 
 import net.ozanarchy.ozanarchyEconomy.api.EconomyAPI;
+import net.ozanarchy.ozanarchyTowns.commands.TownBankCommands;
 import net.ozanarchy.ozanarchyTowns.commands.TownsCommand;
 import net.ozanarchy.ozanarchyTowns.events.MemberEvents;
 import net.ozanarchy.ozanarchyTowns.events.ProtectionListener;
 import net.ozanarchy.ozanarchyTowns.events.TownEvents;
 import net.ozanarchy.ozanarchyTowns.handlers.ChunkHandler;
 import net.ozanarchy.ozanarchyTowns.handlers.DatabaseHandler;
+import net.ozanarchy.ozanarchyTowns.util.TownsPlaceholder;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Map;
 
 public final class OzanarchyTowns extends JavaPlugin {
@@ -43,22 +42,51 @@ public final class OzanarchyTowns extends JavaPlugin {
         // Initialize handlers
         DatabaseHandler db = new DatabaseHandler(this);
         TownEvents claim = new TownEvents(db, this, economy);
-        MemberEvents memberEvents = new MemberEvents(db, this);
+        MemberEvents memberEvents = new MemberEvents(db, this, economy, chunkCache);
 
         // Register commands
         getCommand("towns").setExecutor(new TownsCommand(db,claim,memberEvents));
+        getCommand("townbank").setExecutor(new TownBankCommands(memberEvents));
 
         // Register events
         getServer().getPluginManager().registerEvents(claim, this);
-        getServer().getPluginManager().registerEvents(memberEvents, this);
+        getServer().getPluginManager().registerEvents(new MemberEvents(db, this, economy, chunkCache), this);
         getServer().getPluginManager().registerEvents(new ProtectionListener(this, db ,chunkCache), this);
 
         //MySQL
         setupMySql();
         createTables();
 
+        //PlaceHolderApi Enabled?
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new TownsPlaceholder(this, db).register();
+            getLogger().info("PlaceholderAPI Enabled");
+        }
+
         //Reload chunk info
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::reloadChunkCache, 300L, 300L);
+
+        //Upkeep Handler
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+            try (ResultSet rs = db.getTownsNeedingUpkeep()){
+                while (rs.next()){
+                    int townId = rs.getInt("town_id");
+                    double cost = rs.getDouble("upkeep_cost");
+
+                    boolean paid = db.withdrawTownMoney(townId, cost);
+
+                    if(paid){
+                        db.updateLastUpkeep(townId);
+                        claim.notifyTown(townId, "&aTown upkeep of &e$" + cost + " &ahas been paid.");
+                    } else {
+                        claim.notifyTown(townId, "&cTown upkeep is overdue! Deposit funds to avoid deletion.");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        }, 0L, 20 * 60 * 15);
     }
 
     @Override
@@ -112,6 +140,15 @@ public final class OzanarchyTowns extends JavaPlugin {
                     "INDEX (town_id)" +
                     ")";
             stmt.executeUpdate(members);
+            String townBank = "CREATE TABLE IF NOT EXISTS town_bank (" +
+                    "town_id INT NOT NULL," +
+                    "balance DOUBLE NOT NULL DEFAULT 0," +
+                    "last_upkeep TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "upkeep_interval INT NOT NULL DEFAULT 86400," +
+                    "upkeep_cost DOUBLE NOT NULL DEFAULT 1.0," +
+                    "FOREIGN KEY (town_id) REFERENCES towns(id) ON DELETE CASCADE"+
+                    ")";
+            stmt.executeUpdate(townBank);
             getLogger().info("Tables checked/created successfully.");
         } catch (SQLException e) {
             getLogger().severe("Error creating tables: " + e.getMessage());

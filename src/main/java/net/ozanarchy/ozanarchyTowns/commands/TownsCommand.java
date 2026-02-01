@@ -1,6 +1,6 @@
 package net.ozanarchy.ozanarchyTowns.commands;
 
-import net.ozanarchy.ozanarchyTowns.Utils;
+import net.ozanarchy.ozanarchyTowns.util.Utils;
 import net.ozanarchy.ozanarchyTowns.events.MemberEvents;
 import net.ozanarchy.ozanarchyTowns.events.TownEvents;
 import net.ozanarchy.ozanarchyTowns.handlers.DatabaseHandler;
@@ -48,7 +48,7 @@ public class TownsCommand implements CommandExecutor {
         }
 
         switch (args[0].toLowerCase()){
-            case "help" -> {
+            case "help", "commands" -> {
                 helpCommand(p);
                 return true;
             }
@@ -87,12 +87,24 @@ public class TownsCommand implements CommandExecutor {
             }
             case "promote" -> {
                 mEvents.promotePlayer(p, args);
+                return true;
             }
             case "demote" -> {
                 mEvents.demotePlayer(p, args);
+                return true;
             }
             case "leave" -> {
                 mEvents.leaveTown(p);
+                return true;
+            }
+            case "visualizer", "chunks" -> {
+                if(config.getBoolean("visualizer.enabled")){
+                    mEvents.chunkVisualizer(p);
+                    return true;
+                } else {
+                    p.sendMessage(Utils.getColor(prefix + "&cChunk visualizer is disabled."));
+                    return true;
+                }
             }
         }
 

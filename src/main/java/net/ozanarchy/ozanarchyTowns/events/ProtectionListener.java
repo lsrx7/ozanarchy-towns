@@ -1,7 +1,7 @@
 package net.ozanarchy.ozanarchyTowns.events;
 
 import net.ozanarchy.ozanarchyTowns.OzanarchyTowns;
-import net.ozanarchy.ozanarchyTowns.Utils;
+import net.ozanarchy.ozanarchyTowns.util.Utils;
 import net.ozanarchy.ozanarchyTowns.handlers.ChunkHandler;
 import net.ozanarchy.ozanarchyTowns.handlers.DatabaseHandler;
 import org.bukkit.Chunk;

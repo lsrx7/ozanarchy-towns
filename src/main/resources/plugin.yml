@@ -3,6 +3,7 @@ version: '1.0'
 main: net.ozanarchy.ozanarchyTowns.OzanarchyTowns
 api-version: '1.21'
 depend: [ozanarchy-economy]
+softdepend: [PlaceholderAPI]
 
 permissions:
   oztowns.commands:
@@ -23,3 +24,7 @@ commands:
     aliases: [town, oztowns, towny]
     usage: '/towns help'
     description: 'Towns command for OzAnarchy-Towns'
+  townbank:
+    aliases: [tbank]
+    usage: '/town bank'
+    description: 'Town Bank command for OzAnarchy-Towns'

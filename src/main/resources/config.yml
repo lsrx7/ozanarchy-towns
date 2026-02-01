@@ -10,10 +10,18 @@ mysql:
 towns:
   cost: 1.0
 
+#Chunk Partical Vizualiser
+visualizer:
+  enabled: true
+  duration: 10
+  own: SCRAPE
+  enemy: DUST
+  wild: COMPOSTER
+
 #Claim Cost
 claims:
   cost: 1.0
-  #Per real day cost to keep the town (COMING SOON)
+  #Per real day cost to keep the town
   upkeep: 1.0
 
 #message Prefix (Server name) leave a space after the prefix
@@ -30,6 +38,13 @@ help:
   - "&f/towns claim &aClaims the chunk you are standing in."
   - "&f/towns unclaim &aUnclaims the chunk you are standing in."
   - "&f/towns leave &aLeaves the town you are in."
+  - "&f/towns visualizer &aShows particle effects of claimed & unclaimed chunks"
+  - "&f/townbank help &aLearn the town bank commands"
+
+bankhelp:
+  - "&f/townbank deposit [amount] &aDeposits money into the town bank."
+  - "&f/townbank withdraw [amount] &aWithdraws money from the town bank."
+  - "&f/townbank balance &aShows the towns bank balance."
 
 #Customize most messages sent to the player.
 messages:
@@ -55,5 +70,5 @@ messages:
   playernotinyourtown: "&cPlayer is not in your town."
   cantpromote: "&cThis player cannot be promoted."
   cantdemote: "&cThis player cannot be demoted."
-
   missingcontainerperm: "&cYou do not have permission to access containers in this town."
+  invalidamount: "&cInvalid amount."

@@ -79,6 +79,29 @@ public class DatabaseHandler {
         return null;
     }
 
+    public String getTownName(int townId) {
+        String sql = """
+            SELECT name
+            FROM towns
+            WHERE id = ?
+            LIMIT 1
+        """;
+
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, townId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("name");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public Integer getChunkTownId(Chunk chunk) {
         String sql = """
             SELECT town_id FROM claims
@@ -331,6 +354,113 @@ public class DatabaseHandler {
         return false;
     }
 
+    //BANKING AND UPKEEP
+    public void createTownBank(int townId){
+        String sql = "INSERT INTO town_bank (town_id) VALUES (?)";
+
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, townId);
+            stmt.executeUpdate();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteTownBank(int townId){
+        String sql = "DELETE FROM town_bank WHERE town_id=?";
+
+        try(PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)){
+            stmt.setInt(1, townId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean depositTownMoney(int townId, double amount) {
+        String sql = "UPDATE town_bank SET balance = balance + ? WHERE town_id=?";
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setInt(2, townId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean withdrawTownMoney(int townId, double amount){
+        String sql = """
+                UPDATE town_bank
+                SET balance = balance - ?
+                WHERE town_id=? AND balance >=?
+                """;
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)){
+            stmt.setDouble(1, amount);
+            stmt.setInt(2, townId);
+            stmt.setDouble(3, amount);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public double getTownBalance(int townId){
+        String sql = "SELECT balance FROM town_bank WHERE town_id=? LIMIT 1";
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)){
+            stmt.setInt(1, townId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("balance");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public void increaseUpkeep(int townId, double amount){
+        String sql = "UPDATE town_bank SET upkeep_cost = upkeep_cost + ? WHERE town_id=?";
+        try(PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setInt(2, townId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void decreaseUpkeep(int townId, double amount){
+        String sql = "UPDATE town_bank SET upkeep_cost = upkeep_cost - ? WHERE town_id=?";
+        try(PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+            stmt.setDouble(1, amount);
+            stmt.setInt(2, townId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateLastUpkeep(int townId) {
+        String sql = "UPDATE town_bank SET last_upkeep = NOW() WHERE id = ?";
+        try (PreparedStatement stmt = plugin.getConnection().prepareStatement(sql)) {
+            stmt.setInt(1, townId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ResultSet getTownsNeedingUpkeep() throws SQLException {
+        String sql = """
+        SELECT tb.town_id, tb.balance, tb.upkeep_cost, tb.last_upkeep
+        FROM town_bank tb
+        WHERE UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(tb.last_upkeep) >= tb.upkeep_interval
+    """;
+        return plugin.getConnection().prepareStatement(sql).executeQuery();
+    }
 
     public Map<String, Integer> loadAllClaims(){
         Map<String, Integer> claims = new ConcurrentHashMap<>();
